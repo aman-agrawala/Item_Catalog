@@ -18,8 +18,8 @@ class Category(Base):
 
 	name = Column(String,nullable=False)
 	id = Column(Integer,primary_key=True)
-	user_id = Column(Integer, ForeignKey('user.id'))
-	user = relationship(User)
+	# user_id = Column(Integer, ForeignKey('user.id'))
+	# user = relationship(User)
 
 	# Add serialize functionality later on for JSON, RSS, XML
 
