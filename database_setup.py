@@ -22,6 +22,12 @@ class Category(Base):
 	# user = relationship(User)
 
 	# Add serialize functionality later on for JSON, RSS, XML
+	@property 
+	def serialize(self):
+		return {
+			'name' : self.name,
+			'id' : self.id
+		}
 
 class Item(Base):
 	__tablename__ = 'item'
@@ -36,6 +42,16 @@ class Item(Base):
 	category = relationship(Category)
 
 	# Add serialize functionality later on for JSON, RSS, XML
+	@property 
+	def serialize(self):
+		return {
+				'name' : self.name,
+				'description' : self.description,
+				'picture' : self.description,
+				'id' : self.id,
+				'user_id' : self.user_id
+			}
+
 
 engine = create_engine('sqlite:///itemcatalog.db')
 
