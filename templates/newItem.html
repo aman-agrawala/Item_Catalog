@@ -1,0 +1,21 @@
+{% extends 'main.html' %}
+{%block content%}
+<!-- Later include header { include "header.html" }  -->
+
+<form action = '{{url_for("newItem", category_id = category_id)}}' method = "POST">
+
+<label for = 'Title'>Title:</label>
+<input type = 'text' name = 'Title'>
+
+<label for = 'description'>Description:</label>
+<input type = 'text' name = 'description'>
+
+<label for ='picture'>Picture</label>
+<input type = 'text' name = 'picture'>
+
+<p><input type = 'submit'></p>
+
+<a href = "{{url_for('itemList', category_id = category_id)}}">Cancel</a>
+
+
+{% endblock %}

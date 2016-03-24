@@ -1,0 +1,30 @@
+{% extends 'main.html' %}
+{% block content %}
+<!-- Later include header { include "header.html" }  -->
+
+{% with messages = get_flashed_messages() %}
+	{% if messages %}
+
+	{% for message in messages %}
+		<ul>
+			<li><strong>{{message}}</strong></li>
+		</ul>
+	{%endfor%}
+	{%endif%}
+{%endwith%}
+
+<div class = 'description'>
+<a href = '{{url_for("homepage")}}'>Homepage</a>	
+<p><h1>{{item.name}}</h1><p>
+
+<h3>{{item.description}}</h3>
+<br>
+<img src = '{{item.picture}}' style="width:304px;height:228px;">
+<br>
+<a href = '{{url_for("editItem", category_id = item.category_id, item_id = item.id)}}'>Edit</a>
+<br>
+<a href = '{{url_for("deleteItem", category_id = item.category_id, item_id = item.id)}}'>Delete</a>
+
+</div>
+
+{%endblock%}

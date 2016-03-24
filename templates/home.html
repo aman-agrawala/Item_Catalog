@@ -1,4 +1,31 @@
 {% extends "main.html" %}
-{% block content %}
-<!-- Later include header -->
+{% block content %} 
+<!-- Later include header { include "header.html" }  -->
 
+{% with messages = get_flashed_messages() %}
+	{% if messages %}
+
+	{% for message in messages %}
+		<ul>
+			<li><strong>{{message}}</strong></li>
+		</ul>
+	{%endfor%}
+	{%endif%}
+{%endwith%}
+
+<div class='left category' style= "float:left; width: 200px; margin: 0px; padding: 25px; border; 25px; margin:25px">
+	{%for category in categories %}
+	<ul>
+		<li><strong><a href = "{{url_for('itemList',category_id = category.id)}}">{{category.name}}</a></strong></li>
+	</ul>
+	{% endfor %}
+</div>
+
+<div class = 'latest items' style="width: 300px; margin-left: 206px; padding: 25px; border; 25px;">
+	{%for item in latestItems %}
+	<ul>
+		<li><strong><a href = "{{url_for('itemDescription', category_id = item.category_id, item_id = item.id)}}">{{item.name}} ({{item.category.name}})</a></strong></li>
+	</ul>
+	{% endfor %}
+</div>
+{%endblock%}

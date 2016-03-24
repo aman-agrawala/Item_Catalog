@@ -1,0 +1,21 @@
+{% extends 'main.html' %}
+{% block content %}
+<!-- Later include header { include "header.html" }  -->
+
+<form action = '{{url_for("deleteItem", category_id = item.category_id, item_id = item.id)}}' method = "POST">
+
+<h3>Are you sure you want to delete the item?</h3>
+<br>
+
+<input type = 'submit' value = 'Delete'>
+<br>
+
+<a href = '{{url_for("itemDescription",category_id = item.category_id, item_id = item.id)}}'>Cancel</a>
+
+</form>
+
+
+{%endblock%}
+
+</body>
+</html>
