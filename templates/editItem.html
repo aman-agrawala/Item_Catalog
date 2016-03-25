@@ -1,6 +1,6 @@
 {% extends 'main.html' %}
 {%block content%}
-<!-- Later include header { include "header.html" }  -->
+{% include "header.html" %}
 
 <form action = '{{url_for("editItem", category_id = item.category_id, item_id = item.id)}}', method = 'POST'>
 
