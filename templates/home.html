@@ -2,6 +2,21 @@
 {% block content %} 
 {% include "header.html" %}
 
+<div class="row divider green">
+		<div class="col-md-12"></div>
+	</div>
+	<div class="row banner menu">
+		<div class="col-md-11 col-md-offset-1 padding-none">
+			<h1>Item Catalog
+			<figure class="creator">
+				<img src="{{ url_for('static', filename='blank_user.gif') }}">
+			</figure>
+			</h1>
+
+		</div>
+	</div>
+
+
 {% with messages = get_flashed_messages() %}
 	{% if messages %}
 
