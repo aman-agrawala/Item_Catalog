@@ -14,6 +14,7 @@
 {%endwith%}
 
 <div class='left category' style= "float:left; width: 200px; margin: 0px; padding: 25px; border; 25px; margin:25px">
+	List of Categories:
 	{%for category in categories %}
 	<ul>
 		<li><strong><a href = "{{url_for('itemList',category_id = category.id)}}">{{category.name}}</a></strong></li>
@@ -22,6 +23,7 @@
 </div>
 
 <div class = 'latest items' style="width: 300px; margin-left: 206px; padding: 25px; border; 25px;">
+	List of Items:
 	{%for item in latestItems %}
 	<ul>
 		<li><strong><a href = "{{url_for('itemDescription', category_id = item.category_id, item_id = item.id)}}">{{item.name}} ({{item.category.name}})</a></strong></li>
