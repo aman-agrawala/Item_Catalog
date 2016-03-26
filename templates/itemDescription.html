@@ -2,6 +2,28 @@
 {% block content %}
 {% include "header.html" %}
 
+<div class="row divider green">
+		<div class="col-md-12"></div>
+	</div>
+	<div class="row banner menu">
+		<div class="col-md-11 col-md-offset-1 padding-none">
+			<h1>Item Catalog
+			<figure class="creator">
+				{% if 'username' not in session %}
+				<img src="{{ url_for('static', filename='blank_user.gif') }}">
+				<figcaption>You're not logged in</figcaption>
+				{% else %}
+				<img src = '{{session.picture}}'>
+				<figcaption>{{session.username}}</figcaption>
+				{% endif %}
+			</figure>
+			</h1>
+
+		</div>
+	</div>
+
+
+
 {% with messages = get_flashed_messages() %}
 	{% if messages %}
 
