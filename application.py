@@ -179,8 +179,9 @@ def gconnect():
     # the following:
 
     # Store the access token in the session for later use.
-    login_session['provider'] = 'google'
+    login_session['provider'] = 'google'    
     login_session['credentials'] = credentials
+    login_session['access_token'] = credentials.access_token
     login_session['gplus_id'] = gplus_id
     print login_session['gplus_id']
 
@@ -216,6 +217,12 @@ def gconnect():
     output += ' "style = "width:300px; height: 300px; border-radius:150px; \
                  -webkit-border-radius: 150px; -moz-border-radius: 150px;"> '
     flash('You are now logged in as %s' % login_session['username'])
+    
+    print credentials.access_token
+    print '\n'
+    print '\n'
+    print '\n'
+
     return output
 
 
@@ -223,6 +230,11 @@ def gconnect():
 @app.route('/gdisconnect')
 def gdisconnect():
     credentials = login_session.get('credentials')
+    print credentials
+    print '\n'
+    print '\n'
+    print '\n'
+    #print credentials.access_token
     # If credentials field is empty than we don't have a record of the user
     # so there is no one to disconnect and we will return 401 error
     if credentials is None:
@@ -309,7 +321,7 @@ def homepage():
     latestItems = session.query(Item).order_by(desc(Item.id)).limit(10)
     # print [i.name for i in latestItems]
     return render_template('home.html', categories=categories,
-                           latestItems=latestItems)
+                           latestItems=latestItems, login_session=login_session)
 
 
 # Lists the items for a specific category
