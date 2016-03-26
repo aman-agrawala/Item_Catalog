@@ -399,7 +399,7 @@ def editItem(category_id, item_id):
 @app.route('/category/<int:category_id>/<int:item_id>/delete',
            methods=['GET', 'POST'])
 def deleteItem(category_id, item_id):
-    # First we check to see if the user is logged in.
+    # First we check to see if the user is logged in. If not get them to.
     if 'username' not in login_session:
         return redirect('/login')
 
