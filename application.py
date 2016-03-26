@@ -296,7 +296,7 @@ def itemsJSON():
 
 # This is the JSON for the items within a specific category
 @app.route('/<int:category_id>/categoryJSON')
-def categoryJSON():
+def categoryJSON(category_id):
     items = session.query(Item).filter_by(category_id=category_id).all()
     return jsonify(Item=[item.serialize for item in items])
 
@@ -361,7 +361,7 @@ def editItem(category_id, item_id):
         return redirect('/login')
 
     # Find the item of interest
-        item = session.query(Item).filter_by(id=item_id).one()
+    item = session.query(Item).filter_by(id=item_id).one()
 
     # Now check to see if the user actually owns the item.
     if item.user_id != login_session['user_id']:
@@ -377,7 +377,8 @@ def editItem(category_id, item_id):
                 if cat.name == request.form['category']:
                     item.category_id = cat.id
             else:
-                flash('Invalid Category!')
+                flash('Invalid Category! Please write the name of an\
+                    already existing category (Case Sensitive)!')
                 return redirect(url_for('itemDescription',
                                 category_id=category_id, item_id=item_id))
         if request.form.get('Title'):
@@ -407,8 +408,8 @@ def deleteItem(category_id, item_id):
 
     # Then we check to see if the user owns this item.
     if item.user_id != login_session['user_id']:
-        return "<script>function myFunction() {alert('You are not authorized \
-                to delete this item. Please create your own item in order to \
+        return "<script>function myFunction() {alert('You are not authorized\
+                to delete this item. Please create your own item in order to\
                 delete.');}</script><body onload = 'myFunction()''>"
 
     # This is the instructions for deleting the item.
