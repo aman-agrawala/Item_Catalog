@@ -38,6 +38,15 @@ from flask import make_response
 # but with a few improvements
 import requests
 
+# Now we import what we need to get Flask-WTF to work
+from flask_wtf import Form
+from wtforms import StringField
+from wtforms.validators import DataRequired
+
+# These are my custom Flask-WTF classes that I made. Each class represents 
+# a form
+from form import editItemForm, newItemForm, deleteItemForm
+
 # declare client id by referencing client_secrets file downloaded from
 # google oauth server
 CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']\
@@ -52,6 +61,29 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+# class MyForm(Form):
+#     name = StringField('Name', validators=[DataRequired()])
+#     description = StringField('Description', validators=[DataRequired()])
+#     category = StringField('Category', validators=[DataRequired()])
+#     picture = StringField('Picture', validator=[DataRequired()])
+
+
+# #@app.before_request
+# def csrf_protect():
+#     if request.method == 'POST':
+#         token = login_session.pop('_csrf_token', None)
+#         if not token or token != request.form.get('_csrf_token'):
+#             response = make_response(json.dumps('Invalid token'), 403)
+#             return response
+
+
+# def generate_csrf_token():
+#     if '_csrf_token' not in login_session:
+#         login_session['_csrf_token'] == random.choice(string.ascii_uppercase + string.digits)
+
+#         return login_session['_csrf_token']
+
+# app.jinja_env.globals['csrf_token'] = generate_csrf_token
 
 # Make state tokens to prevent cross-site attacks
 @app.route('/login')
@@ -337,6 +369,9 @@ def itemDescription(category_id, item_id):
     item = session.query(Item).filter_by(id=item_id).one()
     return render_template('itemDescription.html', item=item)
 
+def user_check_decorator(func_name):
+    def username_check()
+
 
 # This will allow a user to create a new item and it will assign that item
 # to the user.
@@ -346,22 +381,44 @@ def newItem(category_id):
     if 'username' not in login_session:
         return redirect('/login')
 
+    form = newItemForm()
+
     cat = session.query(Category).filter_by(id=category_id).one()
-    print request.method
-    print request.form
-    if request.method == 'POST':
-        newItem = Item(name=request.form['Title'],
+
+    if form.validate_on_submit():
+        newItem = Item(name=request.form['name'],
                        description=request.form['description'],
                        picture=request.form['picture'])
         session.add(newItem)
-        newItem.category_id = category_id
         newItem.user_id = login_session['user_id']
+        newItem.category_id = category_id
         session.add(newItem)
-        session.commit()
-        flash('New item added')
-        return redirect(url_for('itemList', category_id=category_id))
-    else:
-        return render_template('newItem.html', category_id=category_id)
+
+        flash('Item has been created!')
+        return redirect(url_for('itemList', category_id=cat.id))
+
+    if form.errors:
+        for error in form.errors:
+            flash(error)
+        flash('There was an error in your input')
+        return redirect(url_for('itemList', category_id=cat.id))
+
+    return render_template('newItem.html', category_id=category_id, form=form)
+    # print request.method
+    # print request.form
+    # if request.method == 'POST':
+    #     newItem = Item(name=request.form['Title'],
+    #                    description=request.form['description'],
+    #                    picture=request.form['picture'])
+    #     session.add(newItem)
+    #     newItem.category_id = category_id
+    #     newItem.user_id = login_session['user_id']
+    #     session.add(newItem)
+    #     session.commit()
+    #     flash('New item added')
+    #     return redirect(url_for('itemList', category_id=category_id))
+    # else:
+    #     return render_template('newItem.html', category_id=category_id)
 
 
 # This will allow a user to edit an item.
@@ -369,6 +426,8 @@ def newItem(category_id):
            methods=['GET', 'POST'])
 def editItem(category_id, item_id):
     # First check if the user is logged in.
+    form = editItemForm()
+
     if 'username' not in login_session:
         return redirect('/login')
 
@@ -382,29 +441,42 @@ def editItem(category_id, item_id):
                 edit.');}</script><body onload = 'myFunction()''>"
 
     # This is the instructions for making the edit.
-    if request.method == 'POST':
-        cats = session.query(Category).all()
-        if request.form.get('category'):
-            for cat in cats:
-                if cat.name == request.form['category']:
-                    item.category_id = cat.id
-            else:
-                flash('Invalid Category! Please write the name of an\
-                    already existing category (Case Sensitive)!')
-                return redirect(url_for('itemDescription',
-                                category_id=category_id, item_id=item_id))
-        if request.form.get('Title'):
-            item.name = request.form['Title']
-        if request.form.get('description'):
-            item.description = request.form['description']
-        if request.form.get('picture'):
-            item.picture = request.form['picture']
-        session.add(item)
-        session.commit()
-        flash("Item has been added")
-        return redirect(url_for('itemList', category_id=category_id))
-    else:
-        return render_template('editItem.html', item=item)
+    if form.validate_on_submit():
+        flash('Item has been editted!')
+        return redirect(url_for('itemList', category_id=item.category_id))
+
+    if form.errors:
+        print form.errors
+        flash("You didn't input properly")
+        return redirect(url_for('itemList', category_id=item.category_id))
+
+    return render_template('editItem.html', item=item, form=form)
+
+    # if request.method == 'POST':
+    #     cats = session.query(Category).all()
+    #     if request.form.get('category'):
+    #         for cat in cats:
+    #             if cat.name == request.form['category']:
+    #                 item.category_id = cat.id
+    #         else:
+    #             flash('Invalid Category! Please write the name of an\
+    #                 already existing category (Case Sensitive)!')
+    #             return redirect(url_for('itemDescription',
+    #                             category_id=category_id, item_id=item_id))
+    #     if request.form.get('Title'):
+    #         item.name = request.form['Title']
+    #     if request.form.get('description'):
+    #         item.description = request.form['description']
+    #     if request.form.get('picture'):
+    #         item.picture = request.form['picture']
+    #     session.add(item)
+    #     session.commit()
+    #     flash("Item has been added")
+    #     return redirect(url_for('itemList', category_id=category_id))
+    # else:
+    #     form = MyForm()
+    #     if form.validate_on_submit():
+    #         return render_template('editItem.html', item=item)
 
 
 # This will allow a user to delete an item.
@@ -412,6 +484,8 @@ def editItem(category_id, item_id):
            methods=['GET', 'POST'])
 def deleteItem(category_id, item_id):
     # First we check to see if the user is logged in. If not get them to.
+    form = deleteItemForm()
+
     if 'username' not in login_session:
         return redirect('/login')
 
@@ -424,14 +498,29 @@ def deleteItem(category_id, item_id):
                 to delete this item. Please create your own item in order to\
                 delete.');}</script><body onload = 'myFunction()''>"
 
-    # This is the instructions for deleting the item.
-    if request.method == 'POST':
+
+    if form.validate_on_submit():
         session.delete(item)
         flash('Item has been deleted')
         session.commit()
         return redirect(url_for('itemList', category_id=category_id))
-    else:
-        return render_template('deleteItem.html', item=item)
+
+    if form.errors:
+        for error in form.errors:
+            flash(error)
+        flash('There was an error in your input')
+        return redirect(url_for('itemList', category_id=cat.id))
+
+    return render_template('deleteItem.html', item=item, form=form)
+
+    # This is the instructions for deleting the item.
+    # if request.method == 'POST':
+    #     session.delete(item)
+    #     flash('Item has been deleted')
+    #     session.commit()
+    #     return redirect(url_for('itemList', category_id=category_id))
+    # else:
+    #     return render_template('deleteItem.html', item=item)
 
 
 # This is used to create a new user within our database.
