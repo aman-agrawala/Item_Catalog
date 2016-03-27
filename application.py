@@ -391,9 +391,10 @@ def itemDescription(category_id, item_id):
 
 
 def user_check_decorator(func_name):
-    
+    ''' This decorator will check if the user is logged in. '''
     @wraps(func_name)
     def username_check(*args, **kwargs):
+        print 'test'
         if 'username' not in login_session:
             return redirect('/login')
         return func_name(*args, **kawgs)
@@ -401,7 +402,7 @@ def user_check_decorator(func_name):
 
 
 def user_id_check(func_name):
-
+    ''' This decorator will check if the user owns the item '''
     @wraps(func_name)
     def id_check(*args, **kwargs):
         if 'username' not in login_session:
@@ -424,14 +425,15 @@ def user_id_check(func_name):
 
 # This will allow a user to create a new item and it will assign that item
 # to the user.
-@user_check_decorator
+
 @app.route('/category/<int:category_id>/new', methods=['GET', 'POST'])
+@user_check_decorator
 def newItem(category_id):
     ''' This allows the user to create a new item from the category page'''
     # First we check to see if the user is actaully logged in
     # if 'username' not in login_session:
     #     return redirect('/login')
-
+    print 'open'
     form = newItemForm()
 
     cat = session.query(Category).filter_by(id=category_id).one()
@@ -473,10 +475,10 @@ def newItem(category_id):
 
 
 # This will allow a user to edit an item.
-@user_check_decorator
-@user_id_check
 @app.route('/category/<int:category_id>/<int:item_id>/edit',
            methods=['GET', 'POST'])
+@user_check_decorator
+@user_id_check
 def editItem(category_id, item_id):
     ''' Allows the user to edit the name, description and picture of the 
     item. '''
@@ -553,10 +555,11 @@ def editItem(category_id, item_id):
 
 
 # This will allow a user to delete an item.
-@user_check_decorator
-@user_id_check
+
 @app.route('/category/<int:category_id>/<int:item_id>/delete',
            methods=['GET', 'POST'])
+@user_check_decorator
+@user_id_check
 def deleteItem(category_id, item_id):
     ''' This allows the user to delete the item from the database '''
     # First we check to see if the user is logged in. If not get them to.
