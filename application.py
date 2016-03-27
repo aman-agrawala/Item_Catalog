@@ -43,6 +43,9 @@ from flask_wtf import Form
 from wtforms import StringField
 from wtforms.validators import DataRequired
 
+# Import wraps to preserve docstrings
+from functools import wraps
+
 # These are my custom Flask-WTF classes that I made. Each class represents 
 # a form
 from form import editItemForm, newItemForm, deleteItemForm
@@ -51,7 +54,7 @@ from form import editItemForm, newItemForm, deleteItemForm
 # google oauth server
 CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']\
             ['client_id']
-APPLICATION_NAME = 'Item Catalog Application'
+#APPLICATION_NAME = 'Item Catalog Application'
 
 # SQLAlchemy code to connect to database and create the database
 # sessionmaker
@@ -88,17 +91,19 @@ session = DBSession()
 # Make state tokens to prevent cross-site attacks
 @app.route('/login')
 def showLogin():
+    ''' This creates a random state and sends it to login.html '''
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in xrange(32))
-    print state
+    # print state
     login_session['state'] = state
     return render_template('login.html', STATE=state)
     # return 'State is: %s' % login_session['state']
 
 
-# Connect to google plus and confirm if the authorization attempt is valid
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
+    '''This connects to Google+ and confirms if the authorization 
+    attempt is valid. '''
     # check if the token created by you in login that was sent to the server
     # is the same token that the server is sending back. Helps ensure user is
     # making our request. request.args.get examines the state token passed in
@@ -261,6 +266,8 @@ def gconnect():
 # DISCONNECT - Revoke a current user's token and reset their login_session.
 @app.route('/gdisconnect')
 def gdisconnect():
+    ''' This revokes teh current user's token and resets their 
+    login_session '''
     credentials = login_session.get('credentials')
     print credentials
     print '\n'
@@ -306,6 +313,10 @@ def gdisconnect():
 # possibility of using facebook or other OAuth 2.0 providers.
 @app.route('/disconnect')
 def disconnect():
+    ''' This is a generic disconnect function that determines whether the
+    user logged in through facebook or google+. It removes user_id and 
+    provider from login session since neither gconnect or fbdisconnect
+    do that.'''
     if 'provider' in login_session:
         if login_session['provider'] == 'google':
             gdisconnect()
@@ -327,6 +338,7 @@ def disconnect():
 # This is the JSON for all the categories
 @app.route('/categoryJSON')
 def categoriesJSON():
+    ''' This creates the JSON for all categories '''
     categories = session.query(Category).all()
     return jsonify(Category=[category.serialize for category in categories])
 
@@ -334,6 +346,7 @@ def categoriesJSON():
 # This is the JSON for all the items
 @app.route('/itemsJSON')
 def itemsJSON():
+    ''' This creates the JSON for all items '''
     items = session.query(Item).all()
     return jsonify(Item=[item.serialize for item in items])
 
@@ -341,6 +354,8 @@ def itemsJSON():
 # This is the JSON for the items within a specific category
 @app.route('/<int:category_id>/categoryJSON')
 def categoryJSON(category_id):
+    ''' This creates the JSON for a set of items within a specific
+    category '''
     items = session.query(Item).filter_by(category_id=category_id).all()
     return jsonify(Item=[item.serialize for item in items])
 
@@ -349,6 +364,8 @@ def categoryJSON(category_id):
 @app.route('/')
 @app.route('/home')
 def homepage():
+    ''' This routes the user to the homepage and lists the 10 most 
+    recently created items'''
     categories = session.query(Category).all()
     latestItems = session.query(Item).order_by(desc(Item.id)).limit(10)
     # print [i.name for i in latestItems]
@@ -359,6 +376,7 @@ def homepage():
 # Lists the items for a specific category
 @app.route('/category/<int:category_id>/')
 def itemList(category_id):
+    ''' This lists all items within a specific category '''
     items = session.query(Item).filter_by(category_id=category_id).all()
     return render_template('category.html', cat_id=category_id, items=items)
 
@@ -366,20 +384,53 @@ def itemList(category_id):
 # This will display the item, its picture and its description
 @app.route('/category/<int:category_id>/<int:item_id>/')
 def itemDescription(category_id, item_id):
+    ''' This lists the item, its picture, description along with the 
+    option to edit or delete it. '''
     item = session.query(Item).filter_by(id=item_id).one()
     return render_template('itemDescription.html', item=item)
 
+
 def user_check_decorator(func_name):
-    def username_check()
+    
+    @wraps(func_name)
+    def username_check(*args, **kwargs):
+        if 'username' not in login_session:
+            return redirect('/login')
+        return func_name(*args, **kawgs)
+    return username_check
+
+
+def user_id_check(func_name):
+
+    @wraps(func_name)
+    def id_check(*args, **kwargs):
+        if 'username' not in login_session:
+            return "<script>function myFunction() {alert('You are not authorized \
+                to edit this item. Please create your own item in order to \
+                edit.');}</script><body onload = 'myFunction()''>"
+        return func_name(*args, **kwargs)
+    return id_check
+
+# Sample decorator code
+# def loginRequired(f):
+
+#     @wraps(f)
+#     def loginWrapper(*args, **kwargs):
+#         if 'username' not in login_session:
+#             return redirect(url_for('login', next=request.url))
+#         return f(*args, **kwargs)
+#     return loginWrapper
 
 
 # This will allow a user to create a new item and it will assign that item
 # to the user.
+@user_check_decorator
 @app.route('/category/<int:category_id>/new', methods=['GET', 'POST'])
 def newItem(category_id):
+    ''' This allows the user to create a new item from the category page'''
     # First we check to see if the user is actaully logged in
-    if 'username' not in login_session:
-        return redirect('/login')
+    # if 'username' not in login_session:
+    #     return redirect('/login')
 
     form = newItemForm()
 
@@ -422,26 +473,48 @@ def newItem(category_id):
 
 
 # This will allow a user to edit an item.
+@user_check_decorator
+@user_id_check
 @app.route('/category/<int:category_id>/<int:item_id>/edit',
            methods=['GET', 'POST'])
 def editItem(category_id, item_id):
+    ''' Allows the user to edit the name, description and picture of the 
+    item. '''
     # First check if the user is logged in.
     form = editItemForm()
 
-    if 'username' not in login_session:
-        return redirect('/login')
+    # if 'username' not in login_session:
+    #     return redirect('/login')
 
     # Find the item of interest
     item = session.query(Item).filter_by(id=item_id).one()
 
     # Now check to see if the user actually owns the item.
-    if item.user_id != login_session['user_id']:
-        return "<script>function myFunction() {alert('You are not authorized \
-                to edit this item. Please create your own item in order to \
-                edit.');}</script><body onload = 'myFunction()''>"
+    # if item.user_id != login_session['user_id']:
+    #     return "<script>function myFunction() {alert('You are not authorized \
+    #             to edit this item. Please create your own item in order to \
+    #             edit.');}</script><body onload = 'myFunction()''>"
 
     # This is the instructions for making the edit.
     if form.validate_on_submit():
+        cats = session.query(Category).all()
+        if request.form.get('category'):
+            for cat in cats:
+                if cat.name == request.form['category']:
+                    item.category_id = cat.id
+            else:
+                flash('Invalid Category! Please write the name of an\
+                    already existing category (Case Sensitive)!')
+                return redirect(url_for('itemDescription',
+                                category_id=category_id, item_id=item_id))
+        if request.form.get('Title'):
+            item.name = request.form['Title']
+        if request.form.get('description'):
+            item.description = request.form['description']
+        if request.form.get('picture'):
+            item.picture = request.form['picture']
+        session.add(item)
+        session.commit()
         flash('Item has been editted!')
         return redirect(url_for('itemList', category_id=item.category_id))
 
@@ -480,23 +553,26 @@ def editItem(category_id, item_id):
 
 
 # This will allow a user to delete an item.
+@user_check_decorator
+@user_id_check
 @app.route('/category/<int:category_id>/<int:item_id>/delete',
            methods=['GET', 'POST'])
 def deleteItem(category_id, item_id):
+    ''' This allows the user to delete the item from the database '''
     # First we check to see if the user is logged in. If not get them to.
     form = deleteItemForm()
 
-    if 'username' not in login_session:
-        return redirect('/login')
+    # if 'username' not in login_session:
+    #     return redirect('/login')
 
     # Next we find the item.
     item = session.query(Item).filter_by(id=item_id).one()
 
     # Then we check to see if the user owns this item.
-    if item.user_id != login_session['user_id']:
-        return "<script>function myFunction() {alert('You are not authorized\
-                to delete this item. Please create your own item in order to\
-                delete.');}</script><body onload = 'myFunction()''>"
+    # if item.user_id != login_session['user_id']:
+    #     return "<script>function myFunction() {alert('You are not authorized\
+    #             to delete this item. Please create your own item in order to\
+    #             delete.');}</script><body onload = 'myFunction()''>"
 
 
     if form.validate_on_submit():
@@ -525,6 +601,7 @@ def deleteItem(category_id, item_id):
 
 # This is used to create a new user within our database.
 def createUser(login_session):
+    ''' This creates a new user in the User table. '''
     newUser = User(name=login_session['username'],
                    email=login_session['email'],
                    picture=login_session['picture'])
@@ -536,12 +613,14 @@ def createUser(login_session):
 
 # This is used to get the user object from our database.
 def getUserInfo(user_id):
+    ''' This extracts the user depending on the user's id. '''
     user = session.query(User).filter_by(id=user_id).one()
     return user
 
 
 # This is used to extrac the user's id by their email.
 def getUserID(email):
+    ''' This extracts the user's id using their email. '''
     try:
         user = session.query(User).filter_by(email=email).one()
         return user.id
