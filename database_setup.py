@@ -8,6 +8,8 @@ Base = declarative_base()
 
 # First we create the User table
 class User(Base):
+    ''' Create a User table that will record a user's name, picture and 
+    email '''
     __tablename__ = 'user'
 
     name = Column(String(80), nullable=False)
@@ -18,6 +20,7 @@ class User(Base):
 
 # Next we create the Category table and include a serialize function for JSON
 class Category(Base):
+    ''' Create a Category table that will record the name of each category '''
     __tablename__ = 'category'
 
     name = Column(String, nullable=False)
@@ -36,6 +39,9 @@ class Category(Base):
 
 # Next we create an Item table and include a serialize function for JSON
 class Item(Base):
+    ''' Create an Item table that will record the name, description,
+    picture, the user and id of the user that made the item along 
+    with the category id and category that the item belongs to. '''
     __tablename__ = 'item'
 
     name = Column(String, nullable=False)

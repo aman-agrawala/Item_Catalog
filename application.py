@@ -397,7 +397,7 @@ def user_check_decorator(func_name):
         print 'test'
         if 'username' not in login_session:
             return redirect('/login')
-        return func_name(*args, **kawgs)
+        return func_name(*args, **kwargs)
     return username_check
 
 
@@ -411,6 +411,16 @@ def user_id_check(func_name):
                 edit.');}</script><body onload = 'myFunction()''>"
         return func_name(*args, **kwargs)
     return id_check
+
+def form_errors(form):
+
+    if form.errors:
+        for error in form.errors:
+            flash('Missing: %s' % error)
+        flash('There was an error in your input')
+        return False
+    else:
+        return True
 
 # Sample decorator code
 # def loginRequired(f):
@@ -450,11 +460,14 @@ def newItem(category_id):
         flash('Item has been created!')
         return redirect(url_for('itemList', category_id=cat.id))
 
-    if form.errors:
-        for error in form.errors:
-            flash(error)
-        flash('There was an error in your input')
+    if form_errors(form) == False:
         return redirect(url_for('itemList', category_id=cat.id))
+
+    # if form.errors:
+    #     for error in form.errors:
+    #         flash(error)
+    #     flash('There was an error in your input')
+    #     return redirect(url_for('itemList', category_id=cat.id))
 
     return render_template('newItem.html', category_id=category_id, form=form)
     # print request.method
@@ -520,10 +533,13 @@ def editItem(category_id, item_id):
         flash('Item has been editted!')
         return redirect(url_for('itemList', category_id=item.category_id))
 
-    if form.errors:
-        print form.errors
-        flash("You didn't input properly")
+    if form_errors(form) == False:
         return redirect(url_for('itemList', category_id=item.category_id))
+
+    # if form.errors:
+    #     print form.errors
+    #     flash("You didn't input properly")
+    #     return redirect(url_for('itemList', category_id=item.category_id))
 
     return render_template('editItem.html', item=item, form=form)
 
@@ -584,11 +600,14 @@ def deleteItem(category_id, item_id):
         session.commit()
         return redirect(url_for('itemList', category_id=category_id))
 
-    if form.errors:
-        for error in form.errors:
-            flash(error)
-        flash('There was an error in your input')
+    if form_errors(form) == False:
         return redirect(url_for('itemList', category_id=cat.id))
+
+    # if form.errors:
+    #     for error in form.errors:
+    #         flash(error)
+    #     flash('There was an error in your input')
+    #     return redirect(url_for('itemList', category_id=cat.id))
 
     return render_template('deleteItem.html', item=item, form=form)
 
